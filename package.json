@@ -8,7 +8,9 @@
     "build": "node esbuild.config.mjs --production",
     "format": "prettier --write src",
     "lint": "oxlint src",
-    "release": "release-it"
+    "test": "node --test tests/*.test.mjs",
+    "release": "release-it",
+    "deploy": "pnpm run build && bash scripts/deploy.sh"
   },
   "keywords": [],
   "author": "",

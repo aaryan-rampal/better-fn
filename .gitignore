@@ -15,3 +15,6 @@ styles.css
 
 # saved config
 data.json
+
+# local scripts
+scripts/
