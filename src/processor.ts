@@ -1,4 +1,5 @@
 import BetterFn from "./bf-main";
+import { debugPopover } from "./modules/debug";
 import { type bridgeInfo, createPopover } from "./modules/renderChild";
 import type { MarkdownPostProcessor } from "obsidian";
 import { createSingleton } from "tippy.js";
@@ -133,11 +134,17 @@ export const PopoverHandler: MarkdownPostProcessor = function (
         for (const k of keys) {
           createPopover(infoList, li, k, this.settings.showFnRef);
         }
-      } else
+      } else {
+        debugPopover("preview.footnoteInfo.missing", {
+          fnId,
+          knownKeys: [...infoList.keys()],
+        });
         console.error(
-          "Unable to create popover: ref info not found in %o",
-          infoList
+          "Unable to create popover for %s: ref info not found in %o",
+          fnId,
+          infoList,
         );
+      }
     }
     shouldCreateSingleton = true;
     // NOTE: using "display:none" or hidden will block markdown-preview-pusher
@@ -146,11 +153,15 @@ export const PopoverHandler: MarkdownPostProcessor = function (
 
   if (this.settings.smooth && shouldCreateSingleton) {
     if (singleton) singleton.destroy();
+    const instances = [...infoList.values()]
+      .filter((info) => Boolean(info.popover))
+      // @ts-ignore
+      .map((info) => info.popover.tippy);
+    debugPopover("preview.tippy.singleton.create", {
+      instanceCount: instances.length,
+    });
     bridge.singleton = createSingleton(
-      [...infoList.values()]
-        .filter((info) => Boolean(info.popover))
-        // @ts-ignore
-        .map((info) => info.popover.tippy),
+      instances,
       {
         delay: [100, 0],
         moveTransition: "transform 0.2s ease-out",

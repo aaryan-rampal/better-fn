@@ -3,8 +3,8 @@ import "./main.css";
 import { around } from "monkey-around";
 import {
   Editor,
-  editorEditorField,
   editorInfoField,
+  type HoverParent,
   HoverPopover,
   Keymap,
   MarkdownRenderer,
@@ -17,6 +17,11 @@ import { BetterFnSettingTab, DEFAULT_SETTINGS } from "./settings";
 
 import { type BridgeEl, PopoverHandler } from "./processor";
 import { EditorView } from "@codemirror/view";
+import {
+  debugPopover,
+  logDebugStatus,
+  summarizeElement,
+} from "./modules/debug";
 
 type leafAction = Parameters<Workspace["iterateAllLeaves"]>[0];
 
@@ -28,12 +33,45 @@ type MarkdownViewModified = MarkdownView & {
 const isIntact = (view: View): view is MarkdownView =>
   view instanceof MarkdownView &&
   (view as MarkdownViewModified).onUnloadFile_revert === undefined;
-export default class BetterFn extends Plugin {
+export default class BetterFn extends Plugin implements HoverParent {
   // settings: BetterFnSettings = DEFAULT_SETTINGS;
 
   PopoverHandler = PopoverHandler.bind(this);
 
+  hoverPopover: HoverPopover | null = null;
+
+  private editorHoverPopover: HoverPopover | null = null;
+
+  private editorHoverTarget: HTMLElement | null = null;
+
+  private editorHoverMark: string | null = null;
+
   settings = DEFAULT_SETTINGS;
+
+  private isSameEditorHover(target: HTMLElement, mark: string): boolean {
+    return (
+      this.editorHoverPopover !== null &&
+      this.editorHoverTarget === target &&
+      this.editorHoverMark === mark
+    );
+  }
+
+  private clearEditorHoverPopover(reason: string): void {
+    const hoverPopover = this.editorHoverPopover;
+
+    if (hoverPopover) {
+      debugPopover("editor.hoverPopover.unload", { reason });
+      hoverPopover.unload();
+    }
+
+    this.editorHoverPopover = null;
+    this.editorHoverTarget = null;
+    this.editorHoverMark = null;
+
+    if (this.hoverPopover === hoverPopover) {
+      this.hoverPopover = null;
+    }
+  }
 
   /** Remove redundant element from fnInfo */
   modifyOnUnloadFile: leafAction = (leaf) => {
@@ -128,7 +166,14 @@ export default class BetterFn extends Plugin {
       EditorView.domEventHandlers({
         mouseover: (e: MouseEvent, editorView: EditorView) => {
           if (Keymap.isModifier(e, "Mod")) {
-            if (!(e.target as HTMLElement).hasClass("cm-footref")) return;
+            const target = e.target as HTMLElement;
+            if (!target.hasClass("cm-footref")) {
+              debugPopover("editor.mouseover.mod.nonFootref", {
+                target: summarizeElement(e.target),
+                relatedTarget: summarizeElement(e.relatedTarget),
+              });
+              return;
+            }
 
             const field = editorView.state.field(editorInfoField);
             const editor: Editor = (field as any).editMode?.editor;
@@ -142,21 +187,71 @@ export default class BetterFn extends Plugin {
 
             const content = editorView.state.doc.toString();
             const footnoteContent = this.extractFootnoteContent(content, mark);
+            debugPopover("editor.footref.mouseover", {
+              mark,
+              pos,
+              editorLine: editorPos.line,
+              editorCh: editorPos.ch,
+              footnoteContentLength: footnoteContent.length,
+              target: summarizeElement(e.target),
+              relatedTarget: summarizeElement(e.relatedTarget),
+            });
 
+            if (this.isSameEditorHover(target, mark)) {
+              debugPopover("editor.hoverPopover.skipDuplicate", {
+                mark,
+                target: summarizeElement(target),
+                relatedTarget: summarizeElement(e.relatedTarget),
+              });
+              return;
+            }
+
+            this.clearEditorHoverPopover("replace");
+
+            const previousHoverPopover = this.hoverPopover;
             const hoverPopover = new HoverPopover(
-              <any>editorView,
-              <HTMLElement>e.target,
+              this,
+              target,
               100,
             );
+            debugPopover("editor.hoverPopover.created", {
+              mark,
+              reusedHoverParent: true,
+              hadPreviousHoverPopover: previousHoverPopover !== null,
+              target: summarizeElement(target),
+            });
 
+            this.hoverPopover = hoverPopover;
+            this.editorHoverPopover = hoverPopover;
+            this.editorHoverTarget = target;
+            this.editorHoverMark = mark;
+            hoverPopover.register(() => {
+              if (this.editorHoverPopover === hoverPopover) {
+                this.editorHoverPopover = null;
+                this.editorHoverTarget = null;
+                this.editorHoverMark = null;
+              }
+
+              if (this.hoverPopover === hoverPopover) {
+                this.hoverPopover = null;
+              }
+            });
             hoverPopover.hoverEl.toggleClass("bn-hover-popover", true);
-            MarkdownRenderer.render(
+            const renderPromise = MarkdownRenderer.render(
               field.app,
               footnoteContent,
               hoverPopover.hoverEl,
               <string>field?.file?.path,
               hoverPopover,
             );
+            void renderPromise.then(() => {
+              debugPopover("editor.hoverPopover.rendered", {
+                mark,
+                internalLinks:
+                  hoverPopover.hoverEl.querySelectorAll(".internal-link").length,
+                hoverText: hoverPopover.hoverEl.textContent?.slice(0, 120),
+              });
+            });
 
             const embeds =
               hoverPopover.hoverEl?.querySelectorAll(".internal-link");
@@ -193,6 +288,7 @@ export default class BetterFn extends Plugin {
     console.log("loading BetterFn");
 
     await this.loadSettings();
+    logDebugStatus();
 
     this.registerMarkdownPostProcessor(this.PopoverHandler);
     this.registerEvent(
@@ -207,6 +303,7 @@ export default class BetterFn extends Plugin {
   override onunload() {
     console.log("unloading BetterFn");
 
+    this.clearEditorHoverPopover("plugin-unload");
     this.getLoopAllLeavesFunc(this.clearInfoList, this.refresh)();
   }
 

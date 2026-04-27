@@ -5,6 +5,7 @@ import "tippy.js/animations/shift-toward-subtle.css";
 import { type infoList } from "../processor";
 import tippy, { type Instance, type Props } from "tippy.js";
 
+import { debugPopover, summarizeElement } from "./debug";
 import { unwarp } from "./tools";
 
 tippy.setDefaultProps({
@@ -98,6 +99,11 @@ export function createPopover(
       ? (infoList.get(keyOrEl) as bridgeInfo).refEl
       : keyOrEl;
   const key = typeof keyOrEl === "string" ? keyOrEl : keyOrEl.id;
+  debugPopover("preview.tippy.createPopover", {
+    key,
+    htmlLength: html.length,
+    refEl: summarizeElement(refEl),
+  });
 
   if (!refEl.parentElement) throw new Error("no parent for refEl");
   const warpper = createSpan();
@@ -107,6 +113,10 @@ export function createPopover(
     content: html,
     appendTo: warpper,
     onTrigger: (inst, evt) => {
+      debugPopover("preview.tippy.trigger", {
+        eventType: evt.type,
+        refEl: summarizeElement(refEl),
+      });
       if (evt.type === "click") {
         const defaultValue = tippy.defaultProps.zIndex;
         inst.popper.style.zIndex = (defaultValue - 1).toString();
@@ -114,7 +124,7 @@ export function createPopover(
     },
   });
 
-  refEl.addEventListener("dblclick", (evt) => {
+  refEl.addEventListener("dblclick", () => {
     const child = refEl.firstElementChild;
     if (child instanceof HTMLAnchorElement && showButtom) {
       child.click();
