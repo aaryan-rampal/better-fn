@@ -23,7 +23,8 @@ sup.footnote-ref {
   min-width: 20em;
 }
 
-.markdown-preview-view .tippy-content, .bn-hover-popover {
+.markdown-preview-view .tippy-content,
+.bn-hover-popover {
   max-height: 20em;
   overflow-x: auto;
   font-size: calc(var(--editor-font-size) * 0.9);

@@ -18,8 +18,11 @@ tippy.setDefaultProps({
   animation: "shift-toward-subtle",
   duration: [200, 150],
   allowHTML: true,
-  zIndex:
-    +(getComputedStyle(document.body).getPropertyValue("--layer-popover").trim() || "30"),
+  zIndex: +(
+    getComputedStyle(document.body)
+      .getPropertyValue("--layer-popover")
+      .trim() || "30"
+  ),
 });
 
 export type bridgeInfo = {
