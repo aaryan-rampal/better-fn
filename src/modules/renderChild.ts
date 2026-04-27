@@ -2,7 +2,7 @@ import "tippy.js/dist/tippy.css";
 import "./theme.css";
 import "tippy.js/animations/shift-toward-subtle.css";
 
-import { infoList } from "processor";
+import { type infoList } from "../processor";
 import tippy, { Instance, Props } from "tippy.js";
 
 import { unwarp } from "./tools";

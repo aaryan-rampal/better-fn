@@ -1,18 +1,20 @@
 {
   "compilerOptions": {
-    "baseUrl": "src",
-    "outDir": "",
+    "outDir": "build",
     "inlineSourceMap": true,
     "inlineSources": true,
     "module": "ESNext",
-    "target": "es6",
-    "allowJs": true,
-    "noImplicitAny": true,
-    "moduleResolution": "node",
-    "importHelpers": true,
+    "target": "ES2018",
+    "allowJs": false,
+    "moduleResolution": "node10",
+    "ignoreDeprecations": "6.0",
     "strict": true,
-    "allowSyntheticDefaultImports": true,
-    "lib": ["dom", "es5", "scripthost", "es2015", "dom.iterable"]
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "lib": ["DOM", "ES2018", "DOM.Iterable"]
   },
   "include": ["src/**/*.ts"]
 }

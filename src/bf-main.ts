@@ -13,9 +13,9 @@ import {
   View,
   Workspace,
 } from "obsidian";
-import { BetterFnSettingTab, DEFAULT_SETTINGS } from "settings";
+import { BetterFnSettingTab, DEFAULT_SETTINGS } from "./settings";
 
-import { BridgeEl, PopoverHandler } from "./processor";
+import { type BridgeEl, PopoverHandler } from "./processor";
 import { EditorView } from "@codemirror/view";
 
 type leafAction = Parameters<Workspace["iterateAllLeaves"]>[0];

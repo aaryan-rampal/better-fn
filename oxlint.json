@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/crates/oxc_linter/src/rules.rs",
+  "plugins": ["typescript", "unicorn"],
+  "rules": {
+    "no-console": "warn",
+    "typescript/no-explicit-any": "warn",
+    "typescript/no-non-null-assertion": "warn"
+  },
+  "ignore": ["node_modules", "build"]
+}
