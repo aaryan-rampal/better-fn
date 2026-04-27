@@ -1,6 +1,6 @@
 import BetterFn from "./bf-main";
 import { type bridgeInfo, createPopover } from "./modules/renderChild";
-import { MarkdownPostProcessor } from "obsidian";
+import type { MarkdownPostProcessor } from "obsidian";
 import { createSingleton } from "tippy.js";
 
 export interface BridgeEl extends HTMLElement {

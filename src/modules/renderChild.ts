@@ -3,7 +3,7 @@ import "./theme.css";
 import "tippy.js/animations/shift-toward-subtle.css";
 
 import { type infoList } from "../processor";
-import tippy, { Instance, Props } from "tippy.js";
+import tippy, { type Instance, type Props } from "tippy.js";
 
 import { unwarp } from "./tools";
 
@@ -19,9 +19,7 @@ tippy.setDefaultProps({
   duration: [200, 150],
   allowHTML: true,
   zIndex:
-    +getComputedStyle(document.body)
-      .getPropertyValue("--layer-popover")
-      .trim() ?? 30,
+    +(getComputedStyle(document.body).getPropertyValue("--layer-popover").trim() || "30"),
 });
 
 export type bridgeInfo = {

@@ -63,7 +63,7 @@ export default class BetterFn extends Plugin {
     mod.onUnloadFile_revert = revert;
     this.register(() => {
       revert();
-      mod.onUnloadFile_revert = undefined;
+      delete mod.onUnloadFile_revert;
     });
   };
 
@@ -75,11 +75,11 @@ export default class BetterFn extends Plugin {
       const { infoList, singleton } = bridgeEl;
       if (infoList) {
         infoList.forEach((info) => info.popover?.tippy.destroy());
-        bridgeEl.infoList = undefined;
+        delete bridgeEl.infoList;
       }
       if (singleton) {
         singleton.destroy();
-        bridgeEl.singleton = undefined;
+        delete bridgeEl.singleton;
       }
     }
   };
@@ -189,7 +189,7 @@ export default class BetterFn extends Plugin {
     );
   };
 
-  async onload() {
+  override async onload() {
     console.log("loading BetterFn");
 
     await this.loadSettings();
@@ -204,7 +204,7 @@ export default class BetterFn extends Plugin {
     this.addSettingTab(new BetterFnSettingTab(this));
   }
 
-  onunload() {
+  override onunload() {
     console.log("unloading BetterFn");
 
     this.getLoopAllLeavesFunc(this.clearInfoList, this.refresh)();
